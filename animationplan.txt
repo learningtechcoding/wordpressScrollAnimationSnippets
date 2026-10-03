@@ -1,0 +1,221 @@
+ANIMATION PLAN v2 - WordPress (Elementor) Snippet Migration
+===========================================================
+Goal: 3 reference sites ki saari animations ko "same to same" WordPress snippets
+mein banana, taake baad mein sirf CUSTOM CLASS ya ID laga kar kisi bhi
+Elementor element par animation apply ho jaye.
+
+Reference sites:
+  A) https://advantumhealth.com/        - WordPress, custom CSS+JS (omythic-child theme)
+  B) https://24-7consultancy.pk/        - Laravel, AOS + Slick + jQuery
+  C) Amoxi (ThemeForest) preview        - Elementor theme (Bootstrap 5, Swiper, OwlCarousel)
+
+STATUS: Abhi sirf PLAN hai. Koi code nahi likha. Aap approve karein, phir coding.
+
+
+=====================================================================
+0. ZAROORI BAATEIN (sach pehle)
+=====================================================================
+ - A aur B ka source code (HTML/CSS/JS) dekha hai. Real scroll par FPS/lag
+   naapa nahi (Chrome extension connected nahi tha).
+ - C (Amoxi) ka preview Cloudflare ne block kar diya, is liye iska code nahi
+   dekha. ThemeForest page se sirf yeh pata chala: Elementor, Header/Footer
+   Builder, CSS3 animations, "Parallax Carousel", Swiper + OwlCarousel, Bootstrap 5.
+   Amoxi ki ASAL animations ki list mere paas nahi. Uske liye aap mujhe bata dein
+   kaun kaun si (jaise: text reveal, cursor follower, marquee, parallax, hover
+   image) ya Chrome extension connect karein ya demo ke screenshots/video dein.
+ - GSAP: teeno sites mein (jahan tak dekha) GSAP NAHI mila. AOS sirf B mein hai.
+   Sab kuch CSS + IntersectionObserver + Web Animations API se ban sakta hai,
+   is liye GSAP zaroori nahi. Agar Amoxi mein GSAP nikla to add karenge.
+
+
+=====================================================================
+1. LIBRARIES - jo jo sites mein use ho rahi hain
+=====================================================================
+ Library            Site        Kaam                              Plan
+ -----------------  ----------  --------------------------------  -----------------------
+ AOS 2.3.1          B           scroll reveal (fade/flip)         Apne JS snippet se replace
+ Slick 1.8.1        A, B        carousels / logo slider           CDN enqueue ya Swiper
+ jQuery             A, B        .animate, toggles                 WP mein pehle se hai
+ Magnific Popup     A           hero video popup                  CDN enqueue (optional)
+ Swiper/OwlCarousel C (claimed)  sliders                          confirm baad mein
+ Custom IO/rAF JS   A           .scroll-animate-item + .vis       Apne snippet mein merge
+ GSAP/ScrollTrigger kisi mein nahi mila                           use nahi karenge
+ Font Awesome       A, B        icons + .fa-spin                  theme mein hai
+
+
+=====================================================================
+2. AAP KE MAUJOODA SNIPPETS (jo aap ne bataye)
+=====================================================================
+ S-EXIST-1  "Scroll Animation" (jo paste kiya)
+    - Class: .scroll-animate  +  direction class:
+        top-bottom | bottom-top | left-right | right-left
+    - Web Animations API (element.animate) + IntersectionObserver.
+    - Distance: Y=70px, X=80px, duration 1200ms,
+      easing cubic-bezier(0.22,1,0.36,1), rootMargin -15%.
+    - Elementor editor mein band (return).
+    - Enter par in, EXIT par wapas out (har bar replay hota hai).
+    Kamiyan jo mein dekh raha hoon:
+      a) Sirf slide hai; fade (opacity), scale, flip, stagger nahi hai.
+      b) Element ko pehle se visible rakhta hai (opacity 1), is liye
+         jab tak scroll na ho tab tak "off-screen position" par rehta hai.
+      c) "once" option nahi (sirf replay-on-exit).
+      d) items.find() har entry par - bohat elements par slow; Map behtar.
+      e) prefers-reduced-motion support nahi.
+      f) Distance/duration sab elements ke liye ek jaisi - per-element
+         override (data-attribute / class) nahi.
+
+ S-EXIST-2  "Group all Direction Scroll Animation"  (abhi khali)
+ S-EXIST-3  "Header Footer Animation"                (abhi khali)
+
+
+=====================================================================
+3. PROPOSED SNIPPET MAP (aap ke 3 + 1 naya)
+=====================================================================
+ SNIPPET 1 = "Scroll Animation" (S-EXIST-1)  -> engine rakhenge, upgrade karenge
+ SNIPPET 2 = "Group all Direction Scroll Animation" -> saare reveal TYPES
+ SNIPPET 3 = "Header Footer Animation"
+ SNIPPET 4 (NAYA) = "Components Animation" (counters, marquee, sliders, tabs...)
+ (+ 1 PHP snippet agar libraries enqueue karni hon: Slick/Magnific.)
+
+ Naming rule: sab nayi classes "ax-" se shuru (ax = animation). Purani
+ .scroll-animate chalti rahegi, tootegi nahi.
+
+
+=====================================================================
+4. SNIPPET 2 - SCROLL REVEAL TYPES  (A1 + B1 + C ki reveal)
+=====================================================================
+ Source: A (.scroll-animate-item + .vis), B (AOS 45 elements).
+
+ Elementor mein "CSS Classes" field mein sirf yeh class likhni hogi:
+
+  Direction (A1 + AOS fade-*):
+    ax-fade-up | ax-fade-down | ax-fade-left | ax-fade-right | ax-fade
+  Existing compat (S-EXIST-1):
+    scroll-animate + top-bottom | bottom-top | left-right | right-left
+  Scale / zoom (A: scale(0.97), diagram pop scale(0.2)):
+    ax-zoom-in | ax-zoom-out | ax-pop
+  Flip 3D (AOS flip-right / flip-up):
+    ax-flip-right | ax-flip-left | ax-flip-up | ax-flip-down
+  Stagger (A: nth-child delays 0.06-0.66s, B: AOS delay):
+    PARENT par   ax-stagger  -> bachon ko khud delay milta hai (step 0.06-0.15s)
+    ya ax-delay-100 / 200 / 300 ... 1000
+  Speed:   ax-fast (500ms) | ax-normal (800ms) | ax-slow (1200ms)
+  Distance: ax-dist-sm (20px) | ax-dist-md (50px) | ax-dist-lg (80px)
+  Mode:    ax-once (sirf ek bar)  |  ax-repeat (har bar, jaise abhi hai)
+  Mobile:  ax-no-mobile (mobile par band)
+
+ Engine: ek IntersectionObserver (A wala rAF scroll loop nahi),
+   transform + opacity, will-change sirf animate hote waqt,
+   prefers-reduced-motion, Elementor editor mein band,
+   fade-right ke liye overflow-x:clip (B ka horizontal scroll bug).
+
+ Extra (A ke patterns):
+   - ax-line-draw / ax-image-reveal (clip-path wipe)       [optional]
+   - ax-text-split (word/letter reveal)                    [C ke liye, confirm]
+   - ax-parallax (data-speed)  [C "Parallax Carousel" ke liye, confirm]
+
+
+=====================================================================
+5. SNIPPET 3 - HEADER / FOOTER  (A8 + B6)
+=====================================================================
+ Header (A):
+   H1  Sticky/scrolled header: scroll par body.ax-scrolled lagti hai
+       (compact header, shadow, bg change).
+   H2  Hide-on-scroll-down / show-on-scroll-up (optional).
+   H3  Hamburger -> X animation: 3 bars, rotate +/-45deg, 400ms, delays 0/200/400ms.
+   H4  Off-canvas menu: slide translateX(100%)->0 (0.3s) + overlay fade.
+   H5  Dropdown / sub-menu open: height/grid-rows 0fr->1fr (0.4-0.8s).
+   H6  Menu link colour/underline hover 0.3s.
+   H7  Anchor link smooth scroll (A: 1000ms, header height offset).
+ Header (B):
+   H8  #btn-open dropdown toggle + arrow icon rotate-180.
+   H9  Mobile menu toggle, bahar click par band.
+   H10 Active link underline.
+ Footer:
+   F1  Footer columns stagger reveal (Snippet 2 ke classes).
+   F2  Back-to-top button: scroll par fade-in, click par smooth scroll.
+   F3  Footer link hover underline slide.
+ Elementor ke liye: Header/Footer Builder ke container par
+   class: ax-header | ax-footer | ax-menu-toggle | ax-offcanvas | ax-menu-item
+
+
+=====================================================================
+6. SNIPPET 4 - COMPONENTS  (A2-A6,A9-A11 + B2-B5,B7)
+=====================================================================
+ C1  Count-up numbers   (A: hero statline, about, diagram, results, built)
+       Class: ax-counter  + data-to="250" data-suffix="+" data-duration="1500"
+       Trigger: viewport mein aane par, stagger 150ms.
+ C2  Marquee / logo infinite scroll (A5: 20s linear, translateX 0 -> -50%)
+       Class: ax-marquee  (+ ax-marquee-reverse, ax-pause-hover)
+       JS list duplicate karta hai seamless loop ke liye.
+ C3  Auto-scroll preview (A6: 60s linear, image frame ke andar upar-neeche)
+       Class: ax-autoscroll-frame (frame)  -> andar ki image khud scroll.
+ C4  Hero (A2):
+       - fade-in on load  (.ax-hero-fade)
+       - background video + overlay (rgba(0,0,0,.6))  [Elementor mein native]
+       - video popup (Magnific Popup)  -> class ax-video-popup + data-src
+       - hero stats count-up (C1)
+ C5  Sliders (A7 Slick, B2 Slick x3, C Swiper/Owl):
+       Teen ready presets (B ki settings se):
+         ax-slider-logos   : 5/3/1 slides (desktop/<1280/<576), autoplay 1.5s
+         ax-slider-center  : centerMode, variableWidth, linear easing, focusOnSelect
+         ax-slider-hero    : 1 slide, centerMode, autoplay 1.5s, pauseOnHover off
+       Library: Slick (jQuery) ya Swiper - aap decide karein (Section 9, Q4).
+ C6  Tabs with fade (B4: 1000ms fade, active tab underline #00aeef)
+       Class: ax-tabs  + ax-tab-btn / ax-tab-panel
+ C7  Accordion / FAQ (A11 home-faq, B4 accordion max-h)
+       Class: ax-accordion (smooth height, ek time par ek open)
+ C8  Portfolio filter + load more (B5: 4 items, baqi fadeIn)
+       Class: ax-filter-btn / ax-filter-item / ax-load-more
+ C9  Diagram pop points (A4: scale 0.2 -> 1, per-point delay)
+       Class: ax-pop + ax-stagger (Snippet 2 se)
+ C10 Staff / cards hover (A9, A10)
+       Class: ax-card-hover  (lift + image zoom 0.4s + arrow slide 0.25s)
+       ax-hover-arrow, ax-hover-underline, ax-hover-zoom
+ C11 Small keyframes (B7): ax-blink, ax-chevron (scroll-down arrow bounce),
+       ax-spin (loader), particles background (B) -> optional, last mein.
+ C12 Fade-in on load (B3: logos/slider opacity 0->1 1500ms) -> class ax-load-fade
+
+
+=====================================================================
+7. PERFORMANCE RULES (naya code lag na kare)
+=====================================================================
+ - Sirf transform + opacity animate (layout properties: height/top/left nahi,
+   jahan max-height ki zaroorat ho wahan grid-template-rows trick).
+ - Scroll event ki jagah IntersectionObserver.
+ - jQuery .animate() ki jagah CSS transition / WAAPI.
+ - Slider autoplay: tab hidden ya viewport ke bahar ho to pause.
+ - will-change sirf active animation par, baad mein hata dena.
+ - prefers-reduced-motion = animations band.
+ - Elementor editor/preview mein sab band (aap ke snippet jaisa).
+ - Ek hi IntersectionObserver sab elements ke liye.
+ - Images lazy-load (B mein 8/37 lazy nahi thi - WP mein default hota hai).
+
+
+=====================================================================
+8. KAAM KA ORDER (jab aap haan kahein)
+=====================================================================
+ Step 1  Snippet 1 (aap ka) ko upgrade: bugs fix (Map, once, reduced-motion,
+         overflow) - purani classes chalti rahein.
+ Step 2  Snippet 2: saare reveal types + stagger + speed/distance classes.
+ Step 3  Snippet 3: header/footer animations.
+ Step 4  Snippet 4: counter, marquee, autoscroll, tabs, accordion, hover.
+ Step 5  Sliders + popup (library enqueue PHP snippet).
+ Step 6  Amoxi ki animations add (jab aap list/screenshots dein ya extension connect ho).
+ Step 7  Ek "CLASS CHEAT SHEET" (txt/html) - kaun si class kya karti hai,
+         Elementor mein kahan likhni hai.
+ Step 8  Test: Chrome extension se FPS/lag check (agar connect ho jaye).
+
+
+=====================================================================
+9. SAWAL (jawab dein to coding shuru karun)
+=====================================================================
+ Q1  Elementor confirm hai (aap ke snippet mein elementor-editor-active hai)? Haan/Na.
+ Q2  Amoxi mein kaun si animations chahiye? Ya mein demo ka video/screenshots
+     ya Chrome extension se dekh lun?
+ Q3  Class prefix "ax-" theek hai ya aap ka koi aur naam (jaise "ai-" / "alr-")?
+ Q4  Sliders: Slick (jQuery) rakhun ya halka Swiper?  (Mera suggestion: Swiper.)
+ Q5  Reveal default: "ek bar" (once) ya aap ki tarah "har bar replay"?
+     (Suggestion: default once; ax-repeat se replay.)
+ Q6  Kya Snippet 2 aur 1 ko ek hi file mein merge kar dun, ya alag rakhun?
+ Q7  Sirf HOME pages ya inner pages (services/blog/staff) bhi?

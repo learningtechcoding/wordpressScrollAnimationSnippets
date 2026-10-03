@@ -1,0 +1,1417 @@
+<!--
+==========================================================================
+ AX SCROLL ANIMATION  (CSS transitions + a single IntersectionObserver)
+ WPCode > HTML Snippet | Location: "Site Wide Header" (no flash on load)
+ Documentation, live demos and every class: index.html
+==========================================================================
+
+ Two ways to use it:
+   A) Elementor > Advanced > CSS Classes: type a class (for example: ax-rise-3d)
+   B) In the script below, add a line to the TARGETS list with any class or ID selector
+      (for example: ["#hero-title", "ax-split-flip"]) - nothing to type in Elementor.
+
+ After new content is added (popup / AJAX):   window.axRefresh();
+ To check the installed version:               AX_VERSION   (type it in the browser console)
+==========================================================================
+-->
+
+<style id="ax-scroll-css">
+:root { --ax-ease: cubic-bezier(0.22, 1, 0.36, 1); }
+
+.ax-rise-3d { transform-origin: 50% 100%; }
+.ax-tilt-left { transform-origin: 0 100%; }
+.ax-tilt-right { transform-origin: 100% 100%; }
+.ax-skew-up { transform-origin: 0 100%; }
+.ax-swing-left { transform-origin: 0 50%; }
+.ax-swing-right { transform-origin: 100% 50%; }
+.ax-pop { --ax-ease: cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ax-elastic { --ax-ease: cubic-bezier(0.3, 1.9, 0.5, 1); }
+.ax-drop { --ax-ease: cubic-bezier(0.34, 1.56, 0.64, 1); }
+@supports (transition-timing-function: linear(0, 1)) { .ax-drop { --ax-ease: linear(0, 0.005, 0.019, 0.043, 0.076, 0.118, 0.17, 0.232, 0.303, 0.383, 0.473, 0.572, 0.681, 0.799, 0.926, 0.97, 0.91, 0.86, 0.819, 0.788, 0.766, 0.753, 0.75, 0.757, 0.772, 0.798, 0.833, 0.877, 0.931, 0.994, 0.973, 0.952, 0.94, 0.938, 0.945, 0.962, 0.988, 0.991, 0.985, 0.988, 1); } }
+.ax-bounce-up { --ax-ease: cubic-bezier(0.34, 1.56, 0.64, 1); }
+@supports (transition-timing-function: linear(0, 1)) { .ax-bounce-up { --ax-ease: linear(0, 0.005, 0.019, 0.043, 0.076, 0.118, 0.17, 0.232, 0.303, 0.383, 0.473, 0.572, 0.681, 0.799, 0.926, 0.97, 0.91, 0.86, 0.819, 0.788, 0.766, 0.753, 0.75, 0.757, 0.772, 0.798, 0.833, 0.877, 0.931, 0.994, 0.973, 0.952, 0.94, 0.938, 0.945, 0.962, 0.988, 0.991, 0.985, 0.988, 1); } }
+.ax-grow-x { transform-origin: 0 50%; }
+.ax-grow-y { transform-origin: 50% 0; }
+.ax-split-fade .ax-sp, .ax-split-flip .ax-sp { overflow: visible; padding-bottom: 0; margin-bottom: 0; }
+.ax-split-flip, .ax-split-fade { transform-style: preserve-3d; }
+
+/* Wrappers for split text (created by the script) */
+.ax-sp { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.ax-si { display: inline-block; }
+.ax-word { display: inline-block; white-space: nowrap; }
+
+/* Stops slide and swing effects from creating a horizontal scrollbar. "clip" does not affect a sticky header. */
+body { overflow-x: clip; }
+
+/* If the script does not run, everything becomes visible after 5 seconds (failsafe). */
+@keyframes ax-failsafe {
+    to { opacity: 1; translate: none; scale: none; rotate: none; transform: none; filter: none; clip-path: none; }
+}
+
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+
+    /* ---------- FADE / SLIDE / 3D ---------- */
+
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-fade-up, .ax-fade-down, .ax-fade-left, .ax-fade-right, .ax-fade, .ax-zoom-in, .ax-zoom-out, .ax-from-left, .ax-from-right, .ax-from-top, .ax-from-bottom, .ax-blur-up, .ax-rise-3d, .ax-tilt-left, .ax-tilt-right, .ax-skew-up, .ax-swing-left, .ax-swing-right, .ax-pop, .ax-elastic, .ax-drop, .ax-bounce-up, .ax-flip-right, .ax-flip-left, .ax-flip-up, .ax-flip-down):not(.ax-stagger):not(.ax-sequence):not(.ax-done) {
+        transition-property: opacity, translate, scale, rotate, transform, filter;
+        transition-duration: var(--ax-dur, 900ms);
+        transition-timing-function: var(--ax-ease);
+        transition-delay: 0ms;
+    }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-fade-up, .ax-fade-down, .ax-fade-left, .ax-fade-right, .ax-fade, .ax-zoom-in, .ax-zoom-out, .ax-from-left, .ax-from-right, .ax-from-top, .ax-from-bottom, .ax-blur-up, .ax-rise-3d, .ax-tilt-left, .ax-tilt-right, .ax-skew-up, .ax-swing-left, .ax-swing-right, .ax-pop, .ax-elastic, .ax-drop, .ax-bounce-up, .ax-flip-right, .ax-flip-left, .ax-flip-up, .ax-flip-down):not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-fade-up, .ax-fade-down, .ax-fade-left, .ax-fade-right, .ax-fade, .ax-zoom-in, .ax-zoom-out, .ax-from-left, .ax-from-right, .ax-from-top, .ax-from-bottom, .ax-blur-up, .ax-rise-3d, .ax-tilt-left, .ax-tilt-right, .ax-skew-up, .ax-swing-left, .ax-swing-right, .ax-pop, .ax-elastic, .ax-drop, .ax-bounce-up, .ax-flip-right, .ax-flip-left, .ax-flip-up, .ax-flip-down):not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in {
+        opacity: 1; translate: none; scale: none; rotate: none; filter: none;
+        transition-delay: var(--ax-delay, 0ms);
+    }
+
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-fade-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 var(--ax-dist, 50px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-fade-down:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 calc(var(--ax-dist, 50px) * -1); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-fade-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: var(--ax-dist, 50px) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-fade-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: calc(var(--ax-dist, 50px) * -1) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-zoom-in:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 0.8; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-zoom-out:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 1.2; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-from-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: max(-100%, -50vw) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-from-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: min(100%, 50vw) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-from-top:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 max(-100%, -150px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-from-bottom:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 min(100%, 150px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-blur-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 var(--ax-dist, 50px); filter: blur(14px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-rise-3d:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(900px) rotateX(40deg); translate: 0 var(--ax-dist, 50px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-rise-3d:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(900px) rotateX(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-tilt-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { rotate: -10deg; translate: calc(var(--ax-dist, 50px) * -1.2) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-tilt-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { rotate: 10deg; translate: calc(var(--ax-dist, 50px) * 1.2) 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-skew-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: skewY(8deg); translate: 0 var(--ax-dist, 50px); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-skew-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: skewY(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-swing-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(900px) rotateY(-70deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-swing-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(900px) rotateY(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-swing-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(900px) rotateY(70deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-swing-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(900px) rotateY(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-pop:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 0.2; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-elastic:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 0.5; rotate: -6deg; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-drop:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 calc(var(--ax-dist, 50px) * -2); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-bounce-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { translate: 0 calc(var(--ax-dist, 50px) * 2); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(1000px) rotateY(-90deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(1000px) rotateY(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(1000px) rotateY(90deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(1000px) rotateY(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(1000px) rotateX(-90deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(1000px) rotateX(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-down:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { transform: perspective(1000px) rotateX(90deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-flip-down:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { transform: perspective(1000px) rotateX(0deg); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-flip-down, .ax-flip-left, .ax-flip-right, .ax-flip-up, .ax-rise-3d, .ax-swing-left, .ax-swing-right):not(.ax-stagger):not(.ax-sequence):not(.ax-done) { backface-visibility: hidden; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-blur:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { filter: blur(10px); }
+
+    /* Stagger / sequence: the children are hidden until the script adds their effect classes */
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > :not(.e-con-inner):not(script):not(style):not(.ax-in):not(.ax-done),
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > .e-con-inner > :not(script):not(style):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-li :is(li):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-img :is(img):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-a :is(a):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-p :is(p):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-h :is(h1,h2,h3,h4,h5,h6):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-tr :is(tr):not(.ax-in):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence).ax-items-btn :is(a.elementor-button,button,.btn,.button):not(.ax-in):not(.ax-done) { opacity: 0; }
+
+    /* Stagger / sequence / cascade container: it stays hidden until the script has prepared its children
+       (ax-ready), so the children never show first and then fade out */
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-stagger, .ax-sequence, .ax-cascade):not(.ax-ready):not(.ax-done) { opacity: 0; }
+
+
+
+    /* ---------- IMAGE / SHAPE REVEAL ---------- */
+
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal, .ax-grow-x, .ax-grow-y):not(.ax-stagger):not(.ax-sequence):not(.ax-done) {
+        transition-property: clip-path, scale, filter;
+        transition-duration: var(--ax-dur, 900ms);
+        transition-timing-function: var(--ax-ease);
+        transition-delay: 0ms;
+    }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(100% 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-down:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(0 0 100% 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(0 0 0 100%); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(0 100% 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-curtain-x:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(0 50% 0 50%); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-curtain-y:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: inset(50% 0 50% 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-iris:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: circle(0% at 50% 50%); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-diagonal:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-grow-x:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 0 1; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-grow-y:not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) { scale: 1 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal, .ax-grow-x, .ax-grow-y):not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { scale: none; filter: none; transition-delay: var(--ax-delay, 0ms); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-up:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-down:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-left:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-reveal-right:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-curtain-x:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-curtain-y:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: inset(0 0 0 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-iris:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: circle(150% at 50% 50%); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-diagonal:not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal):not(.ax-stagger):not(.ax-sequence):not(.ax-done) img { transition: scale var(--ax-dur, 900ms) var(--ax-ease); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal):not(.ax-stagger):not(.ax-sequence):not(.ax-done):not(.ax-in) img { scale: 1.2; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal):not(.ax-stagger):not(.ax-sequence):not(.ax-done).ax-in img { scale: 1; transition-delay: var(--ax-delay, 0ms); }
+
+
+    /* ---------- TEXT SPLIT ---------- */
+
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-split-words, .ax-split-chars, .ax-split-fade, .ax-split-flip):not(.ax-split-ready):not(.ax-done) { opacity: 0; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-split-words, .ax-split-chars, .ax-split-fade, .ax-split-flip):not(.ax-done) .ax-si {
+        transition: transform var(--ax-dur, 900ms) var(--ax-ease),
+                    opacity var(--ax-dur, 900ms) var(--ax-ease),
+                    filter var(--ax-dur, 900ms) var(--ax-ease);
+        transition-delay: calc(var(--ax-delay, 0ms) + var(--ax-i, 0) * var(--ax-split-step, 60ms));
+    }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(.ax-split-words, .ax-split-chars, .ax-split-fade, .ax-split-flip):not(.ax-done).ax-in .ax-si { opacity: 1; filter: none; transform: none; }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-split-words:not(.ax-done):not(.ax-in) .ax-si { transform: translate3d(0, 110%, 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-split-chars:not(.ax-done):not(.ax-in) .ax-si { transform: translate3d(0, 110%, 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-split-fade:not(.ax-done):not(.ax-in) .ax-si { opacity: 0; filter: blur(8px); transform: translate3d(0, 0.5em, 0); }
+    :where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) .ax-split-flip:not(.ax-done):not(.ax-in) .ax-si { opacity: 0; transform: perspective(500px) rotateX(-90deg); }
+
+
+    /* ---------- FAILSAFE ---------- */
+
+    :where(html:not(.ax-js)) :is(.ax-fade-up, .ax-fade-down, .ax-fade-left, .ax-fade-right, .ax-fade, .ax-zoom-in, .ax-zoom-out, .ax-from-left, .ax-from-right, .ax-from-top, .ax-from-bottom, .ax-blur-up, .ax-rise-3d, .ax-tilt-left, .ax-tilt-right, .ax-skew-up, .ax-swing-left, .ax-swing-right, .ax-pop, .ax-elastic, .ax-drop, .ax-bounce-up, .ax-flip-right, .ax-flip-left, .ax-flip-up, .ax-flip-down, .ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal, .ax-grow-x, .ax-grow-y, .ax-split-words, .ax-split-chars, .ax-split-fade, .ax-split-flip, :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > :not(.e-con-inner):not(script):not(style), :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > .e-con-inner > :not(script):not(style), :is(.ax-stagger, .ax-sequence).ax-items-li :is(li), :is(.ax-stagger, .ax-sequence).ax-items-img :is(img), :is(.ax-stagger, .ax-sequence).ax-items-a :is(a), :is(.ax-stagger, .ax-sequence).ax-items-p :is(p), :is(.ax-stagger, .ax-sequence).ax-items-h :is(h1,h2,h3,h4,h5,h6), :is(.ax-stagger, .ax-sequence).ax-items-tr :is(tr), :is(.ax-stagger, .ax-sequence).ax-items-btn :is(a.elementor-button,button,.btn,.button), .ax-stagger, .ax-sequence, .ax-cascade) { animation: ax-failsafe 0s linear 5s forwards; }
+    :where(html.ax-off) :is(.ax-fade-up, .ax-fade-down, .ax-fade-left, .ax-fade-right, .ax-fade, .ax-zoom-in, .ax-zoom-out, .ax-from-left, .ax-from-right, .ax-from-top, .ax-from-bottom, .ax-blur-up, .ax-rise-3d, .ax-tilt-left, .ax-tilt-right, .ax-skew-up, .ax-swing-left, .ax-swing-right, .ax-pop, .ax-elastic, .ax-drop, .ax-bounce-up, .ax-flip-right, .ax-flip-left, .ax-flip-up, .ax-flip-down, .ax-reveal-up, .ax-reveal-down, .ax-reveal-left, .ax-reveal-right, .ax-curtain-x, .ax-curtain-y, .ax-iris, .ax-diagonal, .ax-grow-x, .ax-grow-y, .ax-split-words, .ax-split-chars, .ax-split-fade, .ax-split-flip, :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > :not(.e-con-inner):not(script):not(style), :is(.ax-stagger, .ax-sequence):not(.ax-items-li):not(.ax-items-img):not(.ax-items-a):not(.ax-items-p):not(.ax-items-h):not(.ax-items-tr):not(.ax-items-btn):not([data-ax-items]) > .e-con-inner > :not(script):not(style), :is(.ax-stagger, .ax-sequence).ax-items-li :is(li), :is(.ax-stagger, .ax-sequence).ax-items-img :is(img), :is(.ax-stagger, .ax-sequence).ax-items-a :is(a), :is(.ax-stagger, .ax-sequence).ax-items-p :is(p), :is(.ax-stagger, .ax-sequence).ax-items-h :is(h1,h2,h3,h4,h5,h6), :is(.ax-stagger, .ax-sequence).ax-items-tr :is(tr), :is(.ax-stagger, .ax-sequence).ax-items-btn :is(a.elementor-button,button,.btn,.button), .ax-stagger, .ax-sequence, .ax-cascade)      { animation: ax-failsafe 0s linear 0s forwards; }
+
+}
+</style>
+
+<script id="ax-scroll-js">
+(function () {
+    "use strict";
+
+    var root = document.documentElement;
+    root.classList.add("ax-js");
+
+    /* Type AX_VERSION in the browser console to check that the site is running the latest snippet. */
+    window.AX_VERSION = "3.4";
+
+    /* ==========================================
+       TARGETS - add animation to any class or ID
+       Format:  [ "css selector", "ax classes (space separated)", "selector for the children (optional)" ]
+       Examples:
+           [".service-card",  "ax-rise-3d ax-delay-200"],
+           ["#hero-title",    "ax-split-flip ax-slow"],
+           [".team-row",      "ax-stagger ax-tilt-left ax-step-120"],
+
+       The optional third item is for stagger / sequence: which elements inside the container
+       should animate (list items, images, menu links, ...):
+           ["#main-menu",     "ax-stagger ax-fade-down ax-step-80", "li"],
+           [".gallery",       "ax-stagger ax-zoom-in",              "img"],
+           [".logo-row",      "ax-sequence",                        ".logo"],
+    ========================================== */
+
+    var TARGETS = [
+        /* add your own lines here */
+    ];
+
+
+    /* ==========================================
+       SETTINGS
+    ========================================== */
+
+    var DURATION_DEFAULT = 900;
+    var DISTANCE_DEFAULT = 50;
+    var STEP_DEFAULT = 100;              /* stagger gap (ms) */
+
+    /* true  = EVERY element plays when scrolled into view and reverses smoothly on scroll up (default)
+       false = play once; add ax-repeat to the elements that should repeat
+       When true, add ax-once to an element that should play only once */
+    var REPEAT_ALL = true;
+
+    var STAGGER_WINDOW = 600;                  /* ms: children that appear within this window follow one shared schedule */
+
+    /* ---- PAGE LOAD ----
+       true  = the first animation plays once the page has fully loaded (images + fonts), so the header /
+               hero animation is actually seen instead of finishing silently on DOM ready.
+       false = start immediately (on DOM ready) */
+    var WAIT_FOR_LOAD = true;
+    var WAIT_MAX = 3500;                       /* ms: never wait longer than this, even if the page is slow to load */
+    var LOAD_DELAY = 0;                        /* ms: extra wait after load (applies to every animation) */
+    /* If the site has a preloader / page loader, put its selector here (for example ".preloader, #loader").
+       Animations stay paused while it is visible and start as soon as it goes away. */
+    var PRELOADER = "";
+    var PRELOADER_MAX = 10000;                 /* ms: stop waiting for the preloader after this long */
+    var TRIGGER_MARGIN = "0px 0px -12% 0px";   /* an element starts once it is 12% above the bottom edge of the screen */
+    var TRIGGER_LINE = 0.88;                   /* a single element starts at 88% of the screen height */
+    var REVERSE_LINE = 0.8;                    /* scrolling UP: an element plays in reverse once its top sinks below 80% of the
+                                                  screen height, so the reverse is seen while it is still well on screen */
+    var LINE_VISIBLE = 1;                      /* whole section (cascade) / sequence / stagger pieces:
+                                                  whatever part is visible on screen animates straight away */
+    var MOBILE_QUERY = "(max-width: 767px)";
+
+    /* SPEED / DURATION (ms) - works with every effect. Any number: ax-duration-1700 */
+    var DURATION_NAMES = { fastest: 300, fast: 500, normal: 800, slow: 1400, slower: 2000, slowest: 3000 };
+    var STEP_NAMES = { fastest: 30, fast: 50, slow: 200, slower: 300, slowest: 400 };
+    var DISTANCE_NAMES = { sm: 20, md: 50, lg: 100 };
+
+    var FADE = ["ax-fade-up", "ax-fade-down", "ax-fade-left", "ax-fade-right", "ax-fade", "ax-zoom-in", "ax-zoom-out", "ax-from-left", "ax-from-right", "ax-from-top", "ax-from-bottom", "ax-blur-up", "ax-rise-3d", "ax-tilt-left", "ax-tilt-right", "ax-skew-up", "ax-swing-left", "ax-swing-right", "ax-pop", "ax-elastic", "ax-drop", "ax-bounce-up", "ax-flip-right", "ax-flip-left", "ax-flip-up", "ax-flip-down"];
+    var REVEAL = ["ax-reveal-up", "ax-reveal-down", "ax-reveal-left", "ax-reveal-right", "ax-curtain-x", "ax-curtain-y", "ax-iris", "ax-diagonal", "ax-grow-x", "ax-grow-y"];
+    var SPLIT_MODES = { "ax-split-words": "words", "ax-split-chars": "chars", "ax-split-fade": "words", "ax-split-flip": "chars" };
+    var SPLIT_STEPS = { "ax-split-words": 60, "ax-split-chars": 25, "ax-split-fade": 70, "ax-split-flip": 30 };
+    var SPLIT = Object.keys(SPLIT_MODES);
+
+    var PARENTS = ".ax-stagger,.ax-sequence";
+
+    var SELECTOR = ["ax-stagger", "ax-sequence", "ax-cascade"]
+        .concat(FADE, REVEAL, SPLIT)
+        .map(function (c) { return "." + c; })
+        .join(",");
+
+    var NUMBER_KEYS = {
+        delay:    { rx: /^ax-delay-(\d+)$/,    attr: "data-ax-delay" },
+        duration: { rx: /^ax-duration-(\d+)$/, attr: "data-ax-duration" },
+        dist:     { rx: /^ax-dist-(\d+)$/,     attr: "data-ax-distance" },
+        step:     { rx: /^ax-step-(\d+)$/,     attr: "data-ax-step" },
+        after:    { rx: /^ax-after-(\d+)$/,    attr: "data-ax-after" }
+    };
+
+    /* Which elements inside a stagger / sequence are the children (class, or data-ax-items="selector") */
+    var ITEM_PRESETS = { "ax-items-li": "li", "ax-items-img": "img", "ax-items-a": "a", "ax-items-p": "p", "ax-items-h": "h1,h2,h3,h4,h5,h6", "ax-items-tr": "tr", "ax-items-btn": "a.elementor-button,button,.btn,.button" };
+
+
+    /* ==========================================
+       TARGETS: hide them before the page paints (no flash)
+    ========================================== */
+
+    var targetsStyle = null;
+
+    if (TARGETS.length) {
+        try {
+            targetsStyle = document.createElement("style");
+            targetsStyle.id = "ax-targets-css";
+            targetsStyle.textContent =
+                "@media (scripting: enabled) and (prefers-reduced-motion: no-preference){" +
+                ":where(body:not(.elementor-editor-active):not(.elementor-editor-preview)) :is(" + TARGETS.map(function (t) { return t[0]; }).join(",") + ")" +
+                ":not(.ax-in):not(.ax-done){opacity:0}}";
+            (document.head || root).appendChild(targetsStyle);
+        } catch (e) {
+            targetsStyle = null;
+        }
+    }
+
+    function releaseTargetsStyle() {
+        if (targetsStyle && targetsStyle.parentNode) {
+            targetsStyle.parentNode.removeChild(targetsStyle);
+        }
+        targetsStyle = null;
+    }
+
+    function applyTargets() {
+        TARGETS.forEach(function (target) {
+            var list;
+
+            try {
+                list = document.querySelectorAll(target[0]);
+            } catch (e) {
+                if (window.console) console.warn("[ax-scroll] invalid selector:", target[0]);
+                return;
+            }
+
+            var classes = String(target[1]).split(/\s+/).filter(Boolean);
+
+            for (var i = 0; i < list.length; i++) {
+                for (var c = 0; c < classes.length; c++) list[i].classList.add(classes[c]);
+                if (target[2]) list[i].setAttribute("data-ax-items", target[2]);
+            }
+        });
+    }
+
+
+    /* ==========================================
+       HELPERS
+    ========================================== */
+
+    function has(el, cls) {
+        return el.classList.contains(cls);
+    }
+
+    function hasAnyOf(el, list) {
+        for (var i = 0; i < list.length; i++) {
+            if (has(el, list[i])) return list[i];
+        }
+        return null;
+    }
+
+    function realOnly(list) {
+        return Array.prototype.slice.call(list).filter(function (k) {
+            return k.tagName !== "SCRIPT" && k.tagName !== "STYLE";
+        });
+    }
+
+    /* ---- PER-CHILD SETTINGS FROM THE PARENT'S CLASSES ----
+       On the parent:  ax-n1-tilt-right ax-n1-delay-300 ax-n2-zoom-in ax-odd-fade-left ax-last-pop
+       ax-nK-X   = child number K gets ax-X   (n1 = first, n2 = second ...)
+       ax-odd-X  = children 1, 3, 5 ...   |  ax-even-X = children 2, 4, 6 ...
+       ax-last-X = the last child
+       If the same property is set twice: nK wins, then last, then odd/even.
+       With more children than settings the pattern repeats (n1 n2 n3 n4 n1 n2 ...). Turn off: ax-nocycle. */
+    var CHILD_RX = /^ax-(n(\d+)|odd|even|last)-(.+)$/;
+
+    function modKey(cls) {
+        if (FADE.indexOf(cls) > -1 || REVEAL.indexOf(cls) > -1 || SPLIT.indexOf(cls) > -1) return "effect";
+        if (/^ax-delay-/.test(cls)) return "delay";
+        if (/^ax-after-/.test(cls)) return "after";
+        if (/^ax-step-/.test(cls)) return "step";
+        if (/^ax-dist-/.test(cls)) return "dist";
+        if (/^ax-duration-/.test(cls)) return "duration";
+        for (var name in DURATION_NAMES) { if (cls === "ax-" + name) return "duration"; }
+        return cls;
+    }
+
+    function applyChildSpecs(parent, kids) {
+        var specs = [];
+
+        for (var i = 0; i < parent.classList.length; i++) {
+            var m = CHILD_RX.exec(parent.classList[i]);
+            if (!m) continue;
+
+            specs.push({
+                level: m[1] === "odd" || m[1] === "even" ? 0 : (m[1] === "last" ? 1 : 2),
+                who: m[1],
+                n: m[2] ? parseInt(m[2], 10) : 0,
+                cls: "ax-" + m[3]
+            });
+        }
+
+        if (!specs.length) return;
+
+        specs.sort(function (a, b) { return a.level - b.level; });
+
+        /* With more children than settings, the ax-nK pattern repeats:
+           n1 n2 n3 n4, then n1 n2 n3 n4 again ...  (add ax-nocycle on the parent to stop it) */
+        var maxN = 0;
+        specs.forEach(function (s) { if (s.level === 2 && s.n > maxN) maxN = s.n; });
+        var cycle = maxN > 0 && !has(parent, "ax-nocycle");
+
+        kids.forEach(function (kid, index) {
+            var pos = index + 1;
+            var slot = cycle ? ((pos - 1) % maxN) + 1 : pos;
+            var chosen = {};
+
+            var hits = [];
+
+            specs.forEach(function (s) {
+                var hit =
+                    (s.who === "odd" && pos % 2 === 1) ||
+                    (s.who === "even" && pos % 2 === 0) ||
+                    (s.who === "last" && pos === kids.length) ||
+                    (s.level === 2 && s.n === slot);
+
+                /* a real ax-nK (pos <= maxN) wins over everything; a repeated pattern ranks below ax-last */
+                if (hit) hits.push({ p: (s.level === 2 && pos > maxN) ? 0.5 : s.level, cls: s.cls });
+            });
+
+            hits.sort(function (a, b) { return a.p - b.p; });
+            hits.forEach(function (x) { chosen[modKey(x.cls)] = x.cls; });
+
+            var keys = Object.keys(chosen);
+            if (!keys.length) return;
+
+            Array.prototype.slice.call(kid.classList).forEach(function (c) {
+                if (keys.indexOf(modKey(c)) > -1) kid.classList.remove(c);
+            });
+
+            keys.forEach(function (k) { kid.classList.add(chosen[k]); });
+        });
+    }
+
+    /* Children of a stagger / sequence: the direct children (an Elementor container wrapper is handled too),
+       or anything inside chosen with ax-items-li / ax-items-img / data-ax-items="selector" */
+    function itemsOf(parent) {
+        var selector = parent.getAttribute("data-ax-items");
+
+        if (!selector) {
+            for (var key in ITEM_PRESETS) {
+                if (has(parent, key)) { selector = ITEM_PRESETS[key]; break; }
+            }
+        }
+
+        if (selector) {
+            try {
+                var all = realOnly(parent.querySelectorAll(selector));
+
+                /* only the outermost matches (for example a menu's top-level li); sub-menu items
+                   arrive together with their parent and are not animated separately */
+                var top = all.filter(function (k) {
+                    return !all.some(function (o) { return o !== k && o.contains(k); });
+                });
+
+                all.forEach(function (k) {
+                    if (top.indexOf(k) === -1) k.classList.add("ax-done");
+                });
+
+                return top;
+            } catch (e) {
+                if (window.console) console.warn("[ax-scroll] invalid items selector:", selector);
+            }
+        }
+
+        /* Add ax-items-direct on the parent to use the direct children only. */
+        return autoKids(parent, has(parent, "ax-items-direct"));
+    }
+
+    /* Automatic: the container's children. If the container holds just one "wrapper" (such as an Elementor
+       widget's .elementor-widget-container or a section's .elementor-container), look inside it
+       for the real children, so the class can go on any container. */
+    function autoKids(start, direct) {
+        var node = start.querySelector(":scope > .e-con-inner") || start;
+
+        if (!direct) {
+            for (var depth = 0; depth < 8; depth++) {
+                var kids = meaningfulKids(node);
+
+                if (kids.length !== 1) break;
+
+                var only = kids[0];
+
+                if (!only.children.length || hasOwnText(only)) break;
+
+                only.classList.add("ax-done");   /* the wrapper itself must not be hidden */
+                node = only;
+            }
+
+            return meaningfulKids(node);
+        }
+
+        return realOnly(node.children);
+    }
+
+    /* The real (visible) children. Hidden elements, off-screen "skip to content" links and zero-size
+       elements are not counted (for example the hidden <p class="main-title"> in a Header Footer Elementor
+       header, or a mobile menu) - otherwise they look like a second child and stop us reaching the real header. */
+    function meaningfulKids(node) {
+        var keep = [];
+
+        realOnly(node.children).forEach(function (k) {
+            if (isMeaningful(k)) keep.push(k);
+            else k.classList.add("ax-done");     /* these are left alone and stay normal */
+        });
+
+        return keep;
+    }
+
+    function isMeaningful(el) {
+        if (!isShown(el)) return false;
+
+        try {
+            if (el.matches(".screen-reader-text,.skip-link,.sr-only,.visually-hidden,.elementor-screen-only")) return false;
+        } catch (e) {}
+
+        if (el.offsetWidth === 0 && el.offsetHeight === 0) {
+            return getComputedStyle(el).display === "contents";
+        }
+
+        return true;
+    }
+
+    function isShown(el) {
+        return el.offsetParent !== null || getComputedStyle(el).position === "fixed";
+    }
+
+    function hasOwnText(el) {
+        for (var i = 0; i < el.childNodes.length; i++) {
+            if (el.childNodes[i].nodeType === 3 && /\S/.test(el.childNodes[i].nodeValue)) return true;
+        }
+        return false;
+    }
+
+    /* ax-delay-300 or data-ax-delay="300" - looks on the element first, then on the parent */
+    function readNumber(chain, key) {
+        var cfg = NUMBER_KEYS[key];
+
+        for (var n = 0; n < chain.length; n++) {
+            var el = chain[n];
+
+            for (var i = 0; i < el.classList.length; i++) {
+                var m = cfg.rx.exec(el.classList[i]);
+                if (m) return +m[1];
+            }
+
+            var attr = el.getAttribute(cfg.attr);
+            if (attr !== null && attr !== "" && !isNaN(+attr)) return +attr;
+        }
+        return null;
+    }
+
+    function readNamed(chain, names, prefix) {
+        for (var n = 0; n < chain.length; n++) {
+            for (var key in names) {
+                if (has(chain[n], prefix + key)) return names[key];
+            }
+        }
+        return null;
+    }
+
+    function wantsRepeat(el) {
+        return has(el, "ax-repeat") || (REPEAT_ALL && !has(el, "ax-once"));
+    }
+
+    function setVar(el, name, value) {
+        el.style.setProperty(name, value);
+    }
+
+    function maxTime(durations, delays) {
+        function toMs(list) {
+            return list.split(",").map(function (s) {
+                s = s.trim();
+                return s.indexOf("ms") > -1 ? parseFloat(s) : parseFloat(s) * 1000;
+            });
+        }
+        var d = toMs(durations), l = toMs(delays), max = 0;
+
+        for (var i = 0; i < d.length; i++) {
+            max = Math.max(max, d[i] + l[i % l.length]);
+        }
+        return max || 0;
+    }
+
+
+    /* ==========================================
+       DURATION / DISTANCE / DELAY -> CSS variables
+    ========================================== */
+
+    function applyVars(el, chain, extraDelay) {
+
+        var duration = readNumber(chain, "duration");
+        if (duration === null) duration = readNamed(chain, DURATION_NAMES, "ax-");
+        if (duration === null) duration = DURATION_DEFAULT;
+
+        var distance = readNumber(chain, "dist");
+        if (distance === null) distance = readNamed(chain, DISTANCE_NAMES, "ax-dist-");
+        if (distance === null) distance = DISTANCE_DEFAULT;
+
+        var delay = (readNumber(chain.slice(0, 1), "delay") || 0) + (extraDelay || 0);
+
+        setVar(el, "--ax-dur", duration + "ms");
+        setVar(el, "--ax-dist", distance + "px");
+        setVar(el, "--ax-delay", delay + "ms");
+    }
+
+
+    /* ==========================================
+       TEXT SPLIT
+    ========================================== */
+
+    function makeUnit(text, index) {
+        var outer = document.createElement("span");
+        var inner = document.createElement("span");
+
+        outer.className = "ax-sp";
+        inner.className = "ax-si";
+        inner.textContent = text;
+        outer.style.setProperty("--ax-i", index);
+        outer.appendChild(inner);
+
+        return outer;
+    }
+
+    function splitText(el, mode) {
+
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        var nodes = [];
+        var index = 0;
+
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+
+        nodes.forEach(function (node) {
+
+            var tag = node.parentNode.nodeName;
+            if (tag === "SCRIPT" || tag === "STYLE") return;
+
+            var frag = document.createDocumentFragment();
+
+            node.nodeValue.split(/(\s+)/).forEach(function (part) {
+
+                if (!part) return;
+
+                if (/^\s+$/.test(part)) {
+                    frag.appendChild(document.createTextNode(part));
+                    return;
+                }
+
+                if (mode === "words") {
+                    frag.appendChild(makeUnit(part, index++));
+                } else {
+                    var word = document.createElement("span");
+                    word.className = "ax-word";
+
+                    Array.from(part).forEach(function (ch) {
+                        word.appendChild(makeUnit(ch, index++));
+                    });
+
+                    frag.appendChild(word);
+                }
+            });
+
+            node.parentNode.replaceChild(frag, node);
+        });
+
+        el.classList.add("ax-split-ready");
+    }
+
+    function splitTypeOf(el) {
+        for (var i = 0; i < SPLIT.length; i++) {
+            if (has(el, SPLIT[i])) return SPLIT[i];
+        }
+        return null;
+    }
+
+
+    /* ==========================================
+       START
+    ========================================== */
+
+    function start() {
+
+        var body = document.body;
+
+        /* Off inside the Elementor editor (the CSS does not hide anything there either) */
+        if (
+            body.classList.contains("elementor-editor-active") ||
+            body.classList.contains("elementor-editor-preview")
+        ) {
+            return;
+        }
+
+        applyTargets();
+
+        var reduced = window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        /* Old browsers or reduced motion: show everything normally */
+        if (reduced || !("IntersectionObserver" in window)) {
+            var all = document.querySelectorAll(SELECTOR);
+            for (var a = 0; a < all.length; a++) all[a].classList.add("ax-done");
+
+            var parentsAll = document.querySelectorAll(PARENTS);
+            for (var p = 0; p < parentsAll.length; p++) {
+                itemsOf(parentsAll[p]).forEach(function (kid) { kid.classList.add("ax-done"); });
+            }
+            return;
+        }
+
+        var isMobile = window.matchMedia(MOBILE_QUERY).matches;
+        var seen = new WeakSet();
+        var groups = new Map();      /* trigger element -> { items, repeat, shown, split } */
+
+        /* ---------- waiting for the page to load ---------- */
+        var ready = !WAIT_FOR_LOAD;
+        var deferred = [];           /* groups that came into view before the page finished loading */
+        var t0 = performance.now();
+        var fontsOk = !(document.fonts && document.fonts.ready);
+
+        if (!fontsOk) {
+            document.fonts.ready.then(function () { fontsOk = true; });
+            setTimeout(function () { fontsOk = true; }, 1200);
+        }
+
+        function preloaderVisible() {
+            if (!PRELOADER) return false;
+
+            try {
+                var list = document.querySelectorAll(PRELOADER);
+
+                for (var i = 0; i < list.length; i++) {
+                    var cs = getComputedStyle(list[i]);
+                    var shown = cs.display !== "none" && cs.visibility !== "hidden" && parseFloat(cs.opacity) > 0.05;
+
+                    if (shown && (list[i].offsetParent !== null || cs.position === "fixed")) return true;
+                }
+            } catch (e) {}
+
+            return false;
+        }
+
+        function becomeReady() {
+            if (ready) return;
+            ready = true;
+
+            var list = deferred.filter(function (g) { return !g.shown; });
+            deferred = [];
+
+            list.forEach(function (g) {
+                if (!g.repeat && g.trigger) observerIn.unobserve(g.trigger);
+            });
+
+            if (list.length) revealBatch(list);
+            sweep();
+        }
+
+        function tryReady() {
+            if (ready) return;
+
+            var waited = performance.now() - t0;
+            var loaded = document.readyState === "complete" && fontsOk;
+            var blocked = preloaderVisible() && waited < PRELOADER_MAX;
+
+            if ((loaded || waited > WAIT_MAX) && !blocked) {
+                setTimeout(becomeReady, LOAD_DELAY);
+            } else {
+                setTimeout(tryReady, 100);
+            }
+        }
+
+
+        /* ---------- reveal / conceal ---------- */
+
+        /* Once an animation finishes, remove all of the snippet's rules ("settle"), so a section / card /
+           header keeps its own hover, transform, transition and opacity exactly as before.
+           This also applies in repeat mode: the rules are put back when it leaves (scroll up). */
+        function lock(el) {
+            var cs = getComputedStyle(el);
+            var ms = maxTime(cs.transitionDuration, cs.transitionDelay);
+
+            clearTimeout(el.__axT);
+
+            el.__axT = setTimeout(function () {
+                el.classList.add("ax-done");
+                el.__axSettled = true;
+            }, ms + 80);
+        }
+
+        /* Children of one sequence / stagger / cascade that come into view together keep their gap
+           (the first starts at once, the second after the gap ...). A child that arrives later while
+           scrolling simply plays in its own place - in a tall container every part plays at its own time. */
+        function revealBatch(list) {
+            var perSeq = new Map();
+
+            list.forEach(function (g) {
+                if (!g.seq) return;
+                var arr = perSeq.get(g.seq) || [];
+                arr.push(g);
+                perSeq.set(g.seq, arr);
+            });
+
+            var now = performance.now();
+
+            perSeq.forEach(function (arr, seq) {
+                var tmin = Math.min.apply(null, arr.map(function (g) { return g.t; }));
+
+                /* Children arriving within a short window (600 ms) follow one shared schedule, so the gap
+                   (stagger) holds even when the content scrolls in frame by frame */
+                if (!seq.wStart || now - seq.wStart > STAGGER_WINDOW) {
+                    seq.wStart = now;
+                    seq.wAnchor = tmin;
+                    seq.wBase = seq.running > 0 ? 0 : seq.base;
+                }
+
+                arr.forEach(function (g) {
+                    var due = seq.wBase + (g.t - seq.wAnchor);          /* time since the window started */
+                    var delay = Math.max(0, due - (now - seq.wStart));
+
+                    setVar(g.items[0], "--ax-delay", Math.round(delay + g.own) + "ms");
+                });
+            });
+
+            list.forEach(function (g) { reveal(g, false); });
+        }
+
+        function reveal(group, instant) {
+            group.shown = true;
+            group.hyst = false;
+            if (group.seq && !instant) group.seq.running++;
+
+            group.items.forEach(function (el) {
+                if (instant) {
+                    el.classList.add("ax-done");
+                    return;
+                }
+
+                el.classList.add("ax-in");
+
+                if (!group.split && !hasAnyOf(el, SPLIT)) lock(el);
+            });
+        }
+
+        function conceal(group) {
+            group.shown = false;
+            if (group.seq && group.seq.running > 0) group.seq.running--;
+
+            group.items.forEach(function (el) {
+                clearTimeout(el.__axT);
+                el.classList.remove("ax-in");
+
+                /* remove the settle and put the rules back: it now eases towards the hidden state */
+                if (el.__axSettled) {
+                    el.__axSettled = false;
+                    el.classList.remove("ax-done");
+                }
+            });
+        }
+
+
+        /* ---------- observers ---------- */
+
+        /* scroll direction: -1 = scrolling up (reverse), 1 = down */
+        var scrollDir = 0, lastScrollY = window.pageYOffset;
+        window.addEventListener("scroll", function () {
+            var y = window.pageYOffset;
+            if (y !== lastScrollY) scrollDir = y < lastScrollY ? -1 : 1;
+            lastScrollY = y;
+        }, { passive: true });
+
+        var observerIn = new IntersectionObserver(function (entries) {
+
+            var toReveal = [];
+
+            entries.forEach(function (entry) {
+
+                var group = groups.get(entry.target);
+                if (!group) return;
+
+                if (entry.isIntersecting) {
+
+                    if (!group.shown && toReveal.indexOf(group) === -1) {
+
+                        /* the page is still loading: remember it, and play as soon as loading finishes */
+                        if (!ready) {
+                            if (deferred.indexOf(group) === -1) deferred.push(group);
+                            return;
+                        }
+
+                        toReveal.push(group);
+                        if (!group.repeat) observerIn.unobserve(entry.target);
+                    }
+                    return;
+                }
+
+                if (!entry.rootBounds) return;
+
+                if (
+                    group.repeat && group.shown && scrollDir < 0 &&
+                    entry.boundingClientRect.top >= entry.rootBounds.bottom
+                ) {
+                    group.hyst = true;          /* after a reverse, play forward again only from the normal line */
+                    /* Scrolling UP: the element crossed the line it came in from,
+                       and now plays in reverse, smoothly, while still on screen */
+                    conceal(group);
+                }
+
+                /* (An element that is already above the viewport when the page opens must not stay hidden - that is
+                   handled by sweep() from the real layout position. Judging a hidden element by its shifted position
+                   was wrong: a fade-down column at the top looked "already scrolled past" and was shown instantly
+                   with no animation.) */
+            });
+
+            if (toReveal.length) revealBatch(toReveal);
+
+        }, { rootMargin: TRIGGER_MARGIN, threshold: 0 });
+
+        /* Scrolling DOWN: an element that left through the TOP stays shown, so scrolling back up plays it in
+           REVERSE as it leaves at the bottom (it never replays forward first). This observer is only a fallback
+           for elements that leave through the bottom edge without crossing the trigger line (jumps, line = 1). */
+        var observerOut = new IntersectionObserver(function (entries) {
+
+            entries.forEach(function (entry) {
+                var group = groups.get(entry.target);
+
+                if (!group || !group.shown || entry.isIntersecting) return;
+
+                /* Only hide it when the element has fully left the screen through the bottom.
+                   (Being clipped by overflow:hidden or a slider does not count as "not visible".) */
+                var r = entry.boundingClientRect;
+                if (r.top >= window.innerHeight) conceal(group);
+            });
+
+        }, { rootMargin: "0px", threshold: 0 });
+
+
+        /* meta (optional): { seq, t, own } - when the item belongs to a sequence / stagger / cascade */
+        function register(trigger, items, repeat, split, meta) {
+            if (!items.length) return;
+
+            var group = { items: items, repeat: repeat, shown: false, split: split, seq: null, t: 0, own: 0, line: TRIGGER_LINE, trigger: trigger };
+
+            if (meta) {
+                group.seq = meta.seq || null;
+                group.t = meta.t || 0;
+                group.own = meta.own || 0;
+                if (meta.line) group.line = meta.line;
+            }
+
+            groups.set(trigger, group);
+
+            observerIn.observe(trigger);
+            if (repeat) observerOut.observe(trigger);
+        }
+
+
+        /* ---------- stagger ---------- */
+
+        /* ax-stagger  : every child gets the same effect, with an even gap.
+           ax-sequence : every child has its own settings - written on the PARENT's classes:
+                         ax-sequence ax-n1-tilt-right ax-n1-delay-300 ax-n2-zoom-in ax-n3-fade-up ...
+                         ax-after-N (ax-n2-after-500) = "how long after the previous child".
+           Both use the same engine. A class written directly on a child works too
+           (it is used instead of the parent's class). */
+        function setupStagger(parent) {
+
+            var step = readNumber([parent], "step");
+            if (step === null) step = readNamed([parent], STEP_NAMES, "ax-");
+            if (step === null) step = STEP_DEFAULT;
+
+            var parentTypes = FADE.filter(function (c) { return has(parent, c); });
+            if (!parentTypes.length) parentTypes = ["ax-fade-up"];
+
+            var ownTypes = FADE.concat(REVEAL, SPLIT);
+
+            /* Default: each child plays in its own place as you scroll - in a tall container every part
+               plays smoothly at its own time. ax-together: all children play together with the parent. */
+            var together = has(parent, "ax-together");
+            var baseDelay = readNumber([parent], "delay") || 0;
+            var seqObj = { base: baseDelay, running: 0 };
+            var time = together ? baseDelay : 0;
+            var items = [];
+            var allKids = itemsOf(parent);
+
+            /* Put the children into their hidden state WITHOUT an animation: otherwise children that were
+               already visible would fade out first (a reversed animation) and only then play forwards */
+            holdTransitions(allKids);
+
+            /* Children that are not visible right now (for example a hidden mobile menu) are left out of the gap
+               and pattern counting, so the timing of the visible ones stays right */
+            var kids = allKids.filter(isShown);
+            var shownCount = 0;
+
+            /* per-child settings from the parent's classes (ax-n1-..., ax-odd-..., ax-last-...) */
+            applyChildSpecs(parent, kids);
+
+            allKids.forEach(function (kid) {
+
+                seen.add(kid);
+
+                if (isMobile && has(parent, "ax-no-mobile")) {
+                    kid.classList.add("ax-done");
+                    return;
+                }
+
+                if (!hasAnyOf(kid, ownTypes)) {
+                    parentTypes.forEach(function (c) { kid.classList.add(c); });
+                }
+
+                /* gap from the previous child: ax-after-N (on this child) or the parent's step */
+                var gap = readNumber([kid], "after");
+                if (gap === null) gap = step;
+
+                if (kids.indexOf(kid) > -1) {
+                    if (shownCount > 0) time += gap;
+                    shownCount++;
+                }
+
+                var splitType = splitTypeOf(kid);
+
+                if (splitType) {
+                    var kidStep = readNumber([kid], "step");
+
+                    splitText(kid, SPLIT_MODES[splitType]);
+                    setVar(kid, "--ax-split-step", (kidStep !== null ? kidStep : SPLIT_STEPS[splitType]) + "ms");
+                }
+
+                if (together) {
+                    applyVars(kid, [kid, parent], time);
+                    items.push(kid);
+                    return;
+                }
+
+                /* each child has its own trigger: the delay is decided when it is revealed (revealBatch) */
+                applyVars(kid, [kid, parent], 0);
+
+                if (kids.indexOf(kid) === -1) {
+                    kid.classList.add("ax-done");   /* hidden child: leave it normal */
+                    return;
+                }
+
+                register(kid, [kid], wantsRepeat(parent), false, {
+                    seq: seqObj,
+                    t: time,
+                    own: readNumber([kid], "delay") || 0,
+                    line: LINE_VISIBLE
+                });
+            });
+
+            if (together) register(parent, items, wantsRepeat(parent), false, { line: LINE_VISIBLE });
+
+            releaseTransitions(allKids);
+            parent.classList.add("ax-ready");      /* the container can be shown now: its children are hidden and ready */
+        }
+
+        /* Switch transitions off before adding the new "hidden" classes and back on afterwards (after a reflow):
+           this stops children that were already visible from visibly fading out (no reversed animation) */
+        function holdTransitions(list) {
+            list.forEach(function (el) {
+                if (el.__axHold) return;
+                el.__axHold = { value: el.style.transition, priority: el.style.getPropertyPriority("transition") };
+                el.style.setProperty("transition", "none", "important");
+            });
+        }
+
+        function releaseTransitions(list) {
+            if (list.length) void list[0].offsetWidth;      /* apply the styles now, without a transition */
+
+            list.forEach(function (el) {
+                var h = el.__axHold;
+                if (!h) return;
+                el.__axHold = null;
+
+                if (h.value) el.style.setProperty("transition", h.value, h.priority);
+                else el.style.removeProperty("transition");
+            });
+        }
+
+        /* ---------- cascade: an effect on a card / section, plus all the content inside it ----------
+           Put ax-cascade on a container next to its effect class (for example ax-fade-left).
+           The container plays its effect first, then the content inside (heading, text, image,
+           button, list ...) plays the same effect - in a tall container every part plays as it scrolls in. */
+        var CASCADE_STEP = 80;
+        var CASCADE_MAX = 80;
+
+        /* Sliders / carousels / tabs and similar are not entered: they count as one piece
+           (the slides inside are clipped by overflow, so animating them one by one makes no sense) */
+        var CASCADE_OPAQUE = ".swiper,.swiper-container,.swiper-wrapper,.slick-slider,.owl-carousel,.splide,.flickity-enabled," +
+            ".glide,.elementor-widget-image-carousel,.elementor-widget-media-carousel,.elementor-widget-testimonial-carousel," +
+            ".elementor-widget-loop-carousel,.e-n-carousel,[class*='carousel'],[class*='slider'],[class*='gallery-slider']," +
+            "video,iframe,canvas,svg,table,select,form";
+
+        function isOpaque(el) {
+            try { return el.matches(CASCADE_OPAQUE); } catch (e) { return false; }
+        }
+
+        function cascadeUnits(node, depth, out) {
+
+            autoKids(node, false).forEach(function (kid) {
+
+                if (out.length >= CASCADE_MAX) return;
+
+                /* an element with its own animation class plays by itself */
+                if (hasAnyOf(kid, FADE.concat(REVEAL, SPLIT)) || has(kid, "ax-stagger") || has(kid, "ax-sequence") || has(kid, "ax-cascade")) return;
+
+                if (isOpaque(kid)) {
+                    out.push(kid);                               /* slider / carousel: one piece */
+                    return;
+                }
+
+                if (depth < 4 && !hasOwnText(kid)) {
+                    var sub = autoKids(kid, false);
+
+                    if (sub.length >= 2) {
+                        cascadeUnits(kid, depth + 1, out);      /* an inner container: use its children */
+                        return;
+                    }
+                }
+
+                out.push(kid);                                   /* one piece of content */
+            });
+
+            return out;
+        }
+
+        var cascadeStates = new Map();
+
+        function setupCascade(container) {
+
+            if (isMobile && has(container, "ax-no-mobile")) {
+                container.classList.add("ax-ready");
+                return;
+            }
+
+            var st = cascadeStates.get(container);
+
+            if (!st) {
+                var types = FADE.filter(function (c) { return has(container, c); });
+                if (!types.length) types = ["ax-fade-up"];
+
+                var step = readNumber([container], "step");
+                if (step === null) step = CASCADE_STEP;
+
+                var duration = readNumber([container], "duration");
+                if (duration === null) duration = readNamed([container], DURATION_NAMES, "ax-");
+                if (duration === null) duration = DURATION_DEFAULT;
+
+                var delay = readNumber([container], "delay") || 0;
+
+                st = {
+                    types: types,
+                    step: step,
+                    repeat: wantsRepeat(container),
+                    next: 0,                                   /* number of the next child */
+                    idle: 0,
+                    /* starts after the container: about 35% of its duration */
+                    seq: { base: delay + Math.round(duration * 0.35), running: 0 }
+                };
+
+                cascadeStates.set(container, st);
+                watchCascade(container, st);
+            }
+
+            /* New pieces (not seen yet): content created later by JavaScript (sliders, tabs, AJAX)
+               is picked up as well */
+            var fresh = cascadeUnits(container, 0, []).filter(function (u) {
+                return !seen.has(u) && isShown(u);
+            });
+
+            st.units = st.units || [];
+
+            holdTransitions(fresh);
+
+            fresh.forEach(function (unit) {
+
+                seen.add(unit);
+
+                /* if an empty / old wrapper was a piece and new content has now appeared inside it,
+                   drop the wrapper's own animation (otherwise it would animate twice) */
+                st.units = st.units.filter(function (old) {
+                    if (old !== unit && old.contains(unit)) {
+                        groups.delete(old);
+                        observerIn.unobserve(old);
+                        observerOut.unobserve(old);
+                        old.classList.add("ax-done");
+                        return false;
+                    }
+                    return true;
+                });
+
+                st.types.forEach(function (c) { unit.classList.add(c); });
+                applyVars(unit, [unit, container], 0);
+
+                register(unit, [unit], st.repeat, false, { seq: st.seq, t: st.next * st.step, own: 0, line: LINE_VISIBLE });
+                st.units.push(unit);
+                st.next++;
+            });
+
+            releaseTransitions(fresh);
+            container.classList.add("ax-ready");
+
+            return fresh.length;
+        }
+
+        /* if the content inside the container changes later (built by JS / AJAX), look again */
+        function watchCascade(container, st) {
+            if (!("MutationObserver" in window)) return;
+
+            var timer = 0;
+
+            var mo = new MutationObserver(function () {
+                clearTimeout(timer);
+
+                timer = setTimeout(function () {
+                    var added = setupCascade(container);
+                    st.idle = added ? 0 : st.idle + 1;
+
+                    if (added) queueSweep();
+                    if (st.idle >= 12) mo.disconnect();         /* nothing new is arriving: stop watching */
+                }, 250);
+            });
+
+            mo.observe(container, { childList: true, subtree: true });
+        }
+
+
+        /* ---------- scan ---------- */
+
+        function scan() {
+
+            var nodes = document.querySelectorAll(SELECTOR);
+
+            for (var i = 0; i < nodes.length; i++) {
+
+                var el = nodes[i];
+
+                if (seen.has(el)) continue;
+                seen.add(el);
+
+                if (has(el, "ax-stagger") || has(el, "ax-sequence")) {
+                    setupStagger(el);
+                    continue;
+                }
+
+                if (isMobile && has(el, "ax-no-mobile")) {
+                    el.classList.add("ax-done");
+                    continue;
+                }
+
+                /* a card / section's own effect, plus the content inside it (ax-cascade) */
+                if (has(el, "ax-cascade")) {
+                    setupCascade(el);
+                    if (!hasAnyOf(el, FADE.concat(REVEAL, SPLIT))) continue;
+                }
+
+                var splitType = splitTypeOf(el);
+
+                if (splitType) {
+                    var splitStep = readNumber([el], "step");
+
+                    splitText(el, SPLIT_MODES[splitType]);
+                    setVar(el, "--ax-split-step", (splitStep !== null ? splitStep : SPLIT_STEPS[splitType]) + "ms");
+                }
+
+                applyVars(el, [el], 0);
+                /* with ax-cascade on the whole section, the section itself plays as soon as it is visible (before its content) */
+                register(el, [el], wantsRepeat(el), !!splitType, has(el, "ax-cascade") ? { line: LINE_VISIBLE } : null);
+            }
+        }
+
+        /* ---------- end of the page / short pages ----------
+           The trigger line sits 12% above the bottom of the screen. An element at the very end of the page
+           (a short footer), or on a page that cannot scroll, would never reach that line.
+           When the page is at its end, play whatever element is visible on screen. */
+        function atBottom() {
+            /* hidden elements (translate) make the page's scroll height a little taller (~50-150px),
+               so a little tolerance is allowed */
+            return window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 160;
+        }
+
+        /* On every scroll, this checks each element's REAL (layout) position - unaffected by transforms (the
+           hidden shift) and by overflow:hidden / slider clipping. IntersectionObserver treats clipped
+           elements as "not visible", so it cannot be trusted on its own. */
+        function sweep() {
+            if (!ready) return;
+
+            var y = window.pageYOffset, vh = window.innerHeight;
+            var bottomReached = atBottom();
+            var list = [];
+            var gone = [];
+
+            groups.forEach(function (group, trigger) {
+                if (!trigger.isConnected) { gone.push(trigger); return; }
+                if (group.shown) {
+                    if (group.repeat && scrollDir < 0 && trigger.offsetParent !== null && !group.fixedCtx) {
+                        var rt = 0, rn = trigger;
+                        while (rn) { rt += rn.offsetTop; rn = rn.offsetParent; }
+
+                        if (rt - y > vh * REVERSE_LINE) {
+                            group.hyst = true;
+                            conceal(group);
+                        }
+                    }
+                    return;
+                }
+
+                if (group.hyst && scrollDir < 0) return;           /* reversed while scrolling up: do not replay until the user scrolls down again */
+
+                var fixed = false;
+
+                if (trigger.offsetParent === null) {
+                    fixed = getComputedStyle(trigger).position === "fixed";
+                    if (!fixed) return;                                /* hidden element */
+                }
+
+                /* Children inside a fixed header: they are always on screen (they do not move with scroll), so play
+                   them as soon as the page has loaded - do not treat them as "already scrolled past" */
+                if (group.fixedCtx === undefined) {
+                    group.fixedCtx = fixed;
+
+                    for (var n = trigger; !group.fixedCtx && n && n !== document.body; n = n.parentElement) {
+                        if (getComputedStyle(n).position === "fixed") group.fixedCtx = true;
+                    }
+                }
+
+                if (group.fixedCtx) {
+                    list.push(group);
+                    if (!group.repeat) observerIn.unobserve(trigger);
+                    return;
+                }
+
+                /* real (layout) position, without transforms */
+                var top = 0, node = trigger;
+                while (node) { top += node.offsetTop; node = node.offsetParent; }
+
+                var bottom = top + trigger.offsetHeight;
+                var line = bottomReached ? vh : vh * (group.hyst ? Math.min(group.line, TRIGGER_LINE) : group.line);   /* this group's trigger line */
+
+                if (top - y < line && bottom - y > 0) {
+                    list.push(group);
+                    if (!group.repeat) observerIn.unobserve(trigger);
+
+                } else if (!group.repeat && bottom - y <= 0) {
+                    /* already above the viewport (the page opened part-way down): do not leave it hidden */
+                    reveal(group, true);
+                    observerIn.unobserve(trigger);
+                }
+            });
+
+            gone.forEach(function (t) { groups.delete(t); observerIn.unobserve(t); observerOut.unobserve(t); });
+
+            if (list.length) revealBatch(list);
+        }
+
+        var sweepFrame = 0;
+        function queueSweep() {
+            if (sweepFrame) return;
+            sweepFrame = requestAnimationFrame(function () { sweepFrame = 0; sweep(); });
+        }
+
+        scan();
+        queueSweep();
+
+        if (WAIT_FOR_LOAD) tryReady();
+
+        /* the page layout (images / fonts) settles later: look again after a while */
+        [300, 1000, 2500].forEach(function (ms) { setTimeout(queueSweep, ms); });
+
+        window.addEventListener("scroll", queueSweep, { passive: true });
+        window.addEventListener("resize", queueSweep);
+        window.addEventListener("load", function () {
+            scan();
+
+            /* cascade containers: also pick up content that was created after load */
+            cascadeStates.forEach(function (st, container) {
+                if (setupCascade(container)) queueSweep();
+            });
+
+            queueSweep();
+        });
+
+        window.axRefresh = function () {
+            applyTargets();
+            scan();
+            queueSweep();
+        };
+
+        /* Debug: type  axInfo()  or  axInfo("#my-section")  in the console -
+           it shows which elements were found, their children, and their classes / state */
+        window.axInfo = function (selector) {
+            var rows = [];
+
+            groups.forEach(function (group, trigger) {
+                if (selector) {
+                    try { if (!(trigger.matches(selector) || trigger.closest(selector))) return; } catch (e) { return; }
+                }
+
+                rows.push({
+                    element: trigger.tagName.toLowerCase() + (trigger.id ? "#" + trigger.id : "") +
+                             (trigger.className ? "." + String(trigger.className).trim().split(/\s+/).slice(0, 2).join(".") : ""),
+                    items: group.items.length,
+                    inSequence: !!group.seq,
+                    repeat: group.repeat,
+                    shown: group.shown,
+                    firstItem: group.items[0] ? String(group.items[0].className).replace(/\s+/g, " ").slice(0, 70) : ""
+                });
+            });
+
+            if (console.table) console.table(rows); else console.log(rows);
+            return rows.length + " animated group(s)";
+        };
+    }
+
+    /* ==========================================
+       RUN (if anything goes wrong, the page must never stay hidden)
+    ========================================== */
+
+    function run() {
+        try {
+            start();
+        } catch (error) {
+            root.classList.add("ax-off");
+            if (window.console) console.error("[ax-scroll]", error);
+        } finally {
+            releaseTargetsStyle();
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", run);
+    } else {
+        run();
+    }
+
+})();
+</script>

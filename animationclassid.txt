@@ -1,0 +1,335 @@
+ANIMATION CLASSES / ID  -  scroll-animation-v2.html snippet
+===========================================================
+File: scroll-animation-v2.html   (WPCode > HTML Snippet > Site Wide HEADER)
+Test kiya hua: Chrome headless mein sab 40 effects hidden se final state tak chale.
+
+Purani classes (scroll-animate, top-bottom, bottom-top, left-right, right-left)
+ab is snippet mein NAHI hain. Sab kuch nayi "ax-" classes se chalta hai.
+
+Ek element par:  1 EFFECT class  +  chahein to modifiers (speed, delay, distance, mode).
+Ek element par do effect class mat lagayen (sirf ax-blur extra ke taur par lag sakti hai).
+
+
+=====================================================================
+1. EFFECT CLASSES  (koi ek)
+=====================================================================
+
+A) SLIDE / FADE / ZOOM  (chhoti harkat, saaf, sab jagah chalti hain)
+   ax-fade-up        neeche se upar aata hai (fade ke saath)
+   ax-fade-down      upar se neeche aata hai
+   ax-fade-left      right se aata hai
+   ax-fade-right     left se aata hai
+   ax-fade           sirf fade, koi harkat nahi
+   ax-zoom-in        chhota hokar bada hota hai (0.8 -> 1)
+   ax-zoom-out       bada hokar normal hota hai (1.2 -> 1)
+
+B) EDGE SE SLIDE  (apni poori width/height se andar aata hai - bohat nazar aata hai)
+   ax-from-left      left se slide (zyada se zyada 50% screen width)
+   ax-from-right     right se
+   ax-from-top       upar se (zyada se zyada 150px)
+   ax-from-bottom    neeche se (zyada se zyada 150px)
+   Lambe section/container par bhi sahi waqt par trigger hote hain (isi liye limit hai).
+
+C) ALAG MIZAJ KE EFFECTS  (yeh "different" wale hain)
+   ax-blur-up        dhundla (blur) se saaf hota hai + upar aata hai
+   ax-rise-3d        3D mein jhuka hua card seedha hokar uthta hai (neeche ke kinare se)
+   ax-tilt-left      tirchha hokar left se aata hai aur seedha ho jata hai
+   ax-tilt-right     tirchha hokar right se aata hai
+   ax-skew-up        tirchhi (skew) shakal se seedha hokar upar aata hai
+   ax-swing-left     darwaze ki tarah left kabze se khulta hai (3D)
+   ax-swing-right    darwaze ki tarah right kabze se khulta hai
+   ax-pop            chhota se bounce ke saath pop hota hai
+   ax-elastic        rabar ki tarah ghoom kar phailta hai
+   ax-drop           upar se girta hai aur uchhalta hai (bounce)
+   ax-bounce-up      neeche se uthta hai aur uchhalta hai (bounce)
+
+D) 3D FLIP
+   ax-flip-right | ax-flip-left | ax-flip-up | ax-flip-down
+
+E) IMAGE / SHAPE REVEAL  (image ya box widget par lagayen, andar ki image halka zoom-out bhi hoti hai)
+   ax-reveal-up      neeche se upar parda hat-ta hai
+   ax-reveal-down    upar se neeche
+   ax-reveal-left    right se left
+   ax-reveal-right   left se right
+   ax-curtain-x      beech se dono taraf kholta hai (pardon ki tarah)
+   ax-curtain-y      beech se upar-neeche kholta hai
+   ax-iris           beech se gol dayra phailta hai
+   ax-diagonal       tirchha wipe
+   ax-grow-x         line / divider left se right barhti hai
+   ax-grow-y         line upar se neeche barhti hai
+
+F) TEXT EFFECTS  (heading / paragraph / text widget par)
+   ax-split-words    har lafz neeche se mask ke andar se upar aata hai
+   ax-split-chars    har harf mask se upar aata hai
+   ax-split-fade     har lafz dhundla + fade hokar saaf hota hai (mask nahi)
+   ax-split-flip     har harf 3D mein palatta hai
+   Text ke andar <b>, <br>, link sab chalte hain. Bohat lambe paragraph par
+   split-chars mat lagayen (heading ke liye acha hai).
+
+
+=====================================================================
+2. MODIFIERS  (kisi bhi effect ke saath)
+=====================================================================
+
+SPEED = DURATION (ek hi cheez; kitni der mein animation poori ho)
+   Har effect par chalti hai: slide, 3D, reveal, text split aur stagger sab par.
+   ax-fastest         300ms
+   ax-fast            500ms
+   ax-normal          800ms
+   (kuch na likhein)  900ms  <- default
+   ax-slow            1400ms
+   ax-slower          2000ms
+   ax-slowest         3000ms
+   ax-duration-N      koi bhi number (ms), jaise ax-duration-1700 ya ax-duration-5000
+
+DELAY (shuru hone se pehle intezar)
+   ax-delay-N         koi bhi number (ms): ax-delay-100, 200, 300 ... 1000, 1500, 2000,
+                      3000, 5000 ya ax-delay-350. Koi upar ki hadd nahi.
+   Stagger container par lagayen to sab bachon se pehle itna ruk kar shuru hota hai.
+
+DISTANCE (kitna door se aaye - sirf fade-up/down/left/right, blur-up, rise-3d,
+          tilt, skew, drop, bounce-up par asar karta hai)
+   ax-dist-sm         20px
+   ax-dist-md         50px  <- default
+   ax-dist-lg         100px
+   ax-dist-150        koi bhi number (px)
+
+EXTRA
+   ax-blur            kisi bhi effect ke saath dhundla se saaf hona (jaise ax-zoom-in ax-blur)
+
+MODE
+   ax-repeat          REPEAT CLASS: scroll DOWN par smoothly aata hai, scroll UP par wahi line
+                      cross karte hi smoothly ulta ho kar chala jata hai, phir neeche aao to
+                      dobara aata hai. Har haal mein chalti hai (REPEAT_ALL kuch bhi ho).
+   (kuch na likhein)  default bhi yehi repeat hai (snippet mein REPEAT_ALL = true), is liye
+                      class likhna zaroori nahi; ax-repeat likh dein to REPEAT_ALL badalne
+                      par bhi is element ka behavior nahi badlega.
+   ax-once            is element par sirf ek hi bar chalta hai
+   ax-no-mobile       767px aur chhoti screen par animation band (content normal dikhta hai)
+
+   POORI SITE PAR EK BAR: snippet ke script mein   var REPEAT_ALL = true;   ko
+   false kar dein. Phir sirf ax-repeat wale elements repeat honge.
+
+TEXT SPLIT KA GAP
+   ax-step-40         har lafz/harf ke beech 40ms (default: words 60, chars 25, fade 70, flip 30)
+
+
+=====================================================================
+3. STAGGER  (container par - bachon ko ek ke baad ek)
+=====================================================================
+Container (section / container / column) par lagayen, bachon par kuch nahi.
+
+   ax-stagger                       bachon par ax-fade-up, 100ms gap
+   ax-stagger ax-zoom-in            bachon par zoom-in
+   ax-stagger ax-tilt-left          bachon par tilt-left
+   ax-stagger ax-rise-3d ax-step-150   150ms gap
+   ax-stagger ax-fast               gap 50ms     |   ax-stagger ax-slow   gap 200ms
+   (gap: fastest 30 | fast 50 | slow 200 | slower 300 | slowest 400 | default 100;
+    ya seedha ax-step-N. Yeh speed classes bachon ki duration bhi badal deti hain.)
+   ax-stagger ax-delay-300          sab bachon se pehle 300ms ruko
+
+Container par ax-slow / ax-dist-lg / ax-duration-N bhi bachon ko mil jate hain.
+Stagger mein sirf section A, B, C, D wale effects chalte hain (reveal aur text
+effects bachon ko apni apni class se lagayen).
+Elementor ke naye Container (Flexbox) ke andar ka wrapper khud sambhal leta hai.
+
+3b. SEQUENCE  (har bache ki APNI setting - sirf PARENT ki class se, bachon par kuch nahi likhna)
+   Container (parent) ki CSS Classes mein:
+
+      ax-sequence ax-step-100 ax-delay-0 ax-repeat
+      ax-n1-tilt-right ax-n1-duration-900 ax-n1-delay-300 ax-n1-dist-lg
+      ax-n2-zoom-in ax-n2-duration-900 ax-n2-delay-0 ax-n2-dist-50
+      ax-n3-tilt-left ax-n3-duration-900
+      ax-n4-fade-up
+
+   Padhne ka tareeqa:  ax-nK-X  =  K-wale bache par  ax-X   (n1 = pehla, n2 = doosra, ...)
+      ax-n1-tilt-right      pehle bache par ax-tilt-right
+      ax-n1-delay-300       pehle bache ka apna delay (sirf usi ko aage karta hai)
+      ax-n1-dist-lg         pehle bache ka apna distance
+      ax-n2-slow            doosre bache ki apni speed (ya ax-n2-duration-1700)
+      ax-n3-after-500       teesra bacha pichle bache ke 500ms BAAD shuru (container ke gap ki jagah)
+      ax-odd-fade-left      1,3,5... wale bachon par ax-fade-left
+      ax-even-fade-right    2,4,6... wale bachon par ax-fade-right
+      ax-last-pop           aakhri bache par ax-pop
+   Agar ek hi cheez do jagah se aaye: ax-nK sab se upar, phir ax-last, phir ax-odd/ax-even.
+   Jin bachon ki setting na likhi ho unhein container ka effect milta hai (ya ax-fade-up).
+   Yeh classes TARGETS list mein bhi likh sakte hain.
+
+   PATTERN DOHRANA (cycle): bache ax-nK se zyada hon to pattern khud dohraya jata hai.
+      ax-n1..ax-n4 likhi hon aur 7 bache hon:  5vein par n1,  6vein par n2,  7vein par n3.
+      (timing bhi chalti rehti hai: har agla bacha pichle ke gap baad.)
+      Band karne ke liye parent par:  ax-nocycle  (baqi bachon ko container ka effect milta hai).
+      ax-last-X hamesha aakhri bache par jeetta hai, dohraye hue ax-nK par bhi.
+
+   SAB BACHE EK SAATH (koi dusre par depend nahi): parent par  ax-step-0
+      Har bacha apni effect, speed (ax-nK-slow ...) aur apne delay (ax-nK-delay-N) ke saath ek hi waqt par
+      shuru hota hai. Agar chahiye ke sab bache tabhi chalen jab poora container nazar aaye (lambe container
+      mein bhi), to saath mein  ax-together  lagayen:  ax-sequence ax-together ax-step-0 ax-n1-... 
+      Alag alag offset chahiye to bache ke apne delay: ax-n2-delay-500 (sirf doosre bache ko 500ms baad).
+   Timing: pehla bacha container ke delay par; har agla = pichle + (ax-nK-after-N ya container ka step);
+   phir us bache ka apna ax-nK-delay-N sirf usi ko aage karta hai.
+   Class banane ke liye index.html ka "Sequence Builder" use karein (copy karke parent par paste).
+   (Bache par seedhi class likhna bhi chalta hai, lekin zaroori nahi.)
+
+3c. KAHAN KAHAN LAGAYEIN  (website mein kisi bhi container par: section, container, widget, menu, list, gallery, table)
+   Container par ax-stagger (ya ax-sequence) lagayen. Bache APNE APNE MIL JATE HAIN:
+      (kuch nahi)       container ke bache. Agar beech mein sirf ek wrapper ho (Elementor widget ka
+                        .elementor-widget-container, purana .elementor-container, e-con-inner, nav,
+                        tbody...) to uske andar utar kar asli bache dhoondta hai.
+                        Jo bache abhi nazar hi nahi aa rahe (jaise mobile ka chhupa menu) wo timing
+                        aur pattern ki ginti mein nahi aate.
+                        Chhupe hue elements, screen se bahar "skip to content" links, aur zero-size elements
+                        bhi ginti mein nahi aate (Header Footer Elementor ke header mein chhupa hua
+                        p.main-title hota hai - isi liye pehle header ke bache nahi milte thay).
+                        Header par class lagayen: logo / menu / button columns n1, n2, n3... ki setting lete hain.
+                        Menu ke har link ko alag chalana ho: nav widget par ax-items-li, ya header par ax-cascade.
+      ax-items-direct   sirf seedhe bache (andar nahi utarta)
+   Ya bache khud chunne ke liye:
+      ax-items-li       andar ke saare li  (header menu, list, icon list; submenu ke li apne parent li ke saath aate hain)
+      ax-items-img      andar ki saari images
+      ax-items-a        andar ke saare links
+      ax-items-p        andar ke saare paragraphs
+      ax-items-h        andar ki headings h1-h6
+      ax-items-tr       table ki rows
+      ax-items-btn      buttons (.elementor-button, button, .btn, .button)
+      data-ax-items="selector"   apna koi bhi CSS selector  (Elementor Pro: Advanced > Attributes)
+   Misalein:
+      Header menu:   ax-stagger ax-items-li ax-fade-down ax-step-80
+      Gallery:       ax-stagger ax-items-img ax-zoom-in ax-step-120
+      List:          ax-stagger ax-items-li ax-fade-left
+   TARGETS mein teesra hissa (bachon ka selector):
+      ["#main-menu", "ax-stagger ax-fade-down ax-step-80", "li"],
+      [".gallery",   "ax-stagger ax-zoom-in",              "img"],
+
+3d. POORA CONTAINER / CARD / SECTION / HEADER / FOOTER  (+ andar ka content: ax-cascade)
+   Effect class poore container par lagayen -> poora container ek saath smoothly aata hai
+   (scroll up par smoothly wapas jata hai). Sticky / fixed header par bhi, chhote footer par bhi.
+      ax-fade-left                   poora card / section / header / footer ek saath
+      ax-fade-left ax-cascade        PEHLE container, phir uske ANDAR ka content (heading, text, image,
+                                     button, list... aur andar ke sub-containers ke bache) usi effect se,
+                                     ek ke baad ek (gap default 80ms)
+      ax-cascade ax-step-120         content ke tukron ka gap
+      ax-cascade ax-slow ax-delay-300   container ki speed / delay content ko bhi milti hai;
+                                        content container ke baad shuru hota hai
+   Jitna hissa screen par NAZAR aa raha ho wo foran animate hota hai (screen ke bilkul neeche wala hissa
+   bhi): poore section / cascade / sequence / stagger ke tukron par. Ek akela element (jis par sirf
+   ek class ho) screen ki 88% height par chalta hai (snippet mein TRIGGER_LINE; poore section wale
+   LINE_VISIBLE = 1).
+   Lamba section: har hissa SCROLL karte hue apni jagah par animate hota hai (neeche wale hisse tab jab
+   aap wahan pohanchein), sirf container ke saath ek hi dafa nahi. Jo tukra scroll mein aap ke saath
+   kuch hi der ke andar (600ms) aaye wo apne schedule (gap) par chalta hai.
+   Jis andar ke element par apni ax- class ho wo cascade mein nahi aata, apni class se chalta hai.
+   Slider / carousel (swiper, slick, owl, splide, elementor carousel, koi bhi class jis mein 'carousel' ya
+   'slider' ho), video, iframe, table, form: poora EK tukra maane jate hain (andar ki clip hui slides alag
+   se nahi chalti).
+   Content baad mein JS se bane (slider, tabs, ajax) to bhi pakad liya jata hai.
+   Overflow:hidden wale hisse (cards, sliders, boxes) ke andar bhi bache sahi waqt par chalte hain.
+
+   ax-stagger / ax-sequence bhi ab har bacha apni jagah par scroll karte hue chalta hai (lamba container
+   ho ya list). Sab bache parent ke saath ek hi bar chahiye to parent par:  ax-together
+
+   Animation ke baad snippet apni saari rules hata deta hai (settle), is liye card ke apne hover /
+   transition / transform / opacity pehle jaise rehte hain. Scroll up par rules wapas laga di jati hain.
+
+3f. PAGE LOAD PAR ANIMATION  (header / hero jo page khulte hi nazar aate hain)
+   Page khulte hi jo elements screen par hon wo load par animate hote hain. Snippet pehli animation
+   tab chalati hai jab page poori tarah load ho jaye (images + fonts) - warna animation DOM ready par
+   chup-chaap nikal jati thi aur nazar nahi aati thi. Snippet ke upar ki settings:
+      var WAIT_FOR_LOAD = true;   false = pehle jaisa (foran, DOM ready par)
+      var WAIT_MAX = 3500;        load bohat slow ho to bhi itni der (ms) se zyada intezar nahi
+      var LOAD_DELAY = 0;         load ke baad extra intezar (ms), sab animations par
+      var PRELOADER = "";         preloader ka selector, jaise ".preloader, #loader" - jab tak nazar aaye animation ruki rehti hai
+      var PRELOADER_MAX = 10000;  preloader itna ruke to bhi uske baad chala do
+   Kisi ek element ko load par thora ruk kar chalana ho: us par ax-delay-400 (ya ax-delay-N).
+   Header / container jis par ax-sequence, ax-stagger ya ax-cascade ho: jab tak snippet apne bachon ko
+   tayyar na kar le (chhupa kar) poora container CSS se chhupa rehta hai (ax-ready), phir page load par
+   bache FRESH animate hote hain. Pehle bache pehle se nazar aate the, phir bina animation ke ghayab
+   hote (ya ulti animation), phir seedhi chalti thi - ab aisa nahi hota, har refresh par fresh animation.
+   Fixed / sticky header par bhi (scroll position bahal hone par bhi) fresh chalta hai.
+
+3e. DEBUG (agar class lagayi lekin kuch nahi chal raha)
+   Browser console mein:   AX_VERSION   (naya snippet = "3.1"; undefined / purana ho to WPCode mein
+                           poora snippet dobara paste karke Update karein, cache clear karein)
+                           axInfo()     (kaun se element mile, kitne bache, aur unki classes)
+                           axInfo("#mera-section")   (sirf us section ke)
+
+
+=====================================================================
+4. ID / KISI BHI CLASS PAR LAGANA  (Elementor mein class likhe bina)
+=====================================================================
+Snippet ke script mein ek list hai:  TARGETS
+Wahan apni existing class ya ID ka selector likhein, saath mein ax classes:
+
+    var TARGETS = [
+        ["#hero-title",     "ax-split-flip ax-slow"],
+        ["#hero-image",     "ax-iris ax-slow"],
+        [".service-card",   "ax-rise-3d ax-delay-200"],
+        [".team-row",       "ax-stagger ax-tilt-left ax-step-120"],
+        [".elementor-widget-heading h2", "ax-split-words"],
+        ["#footer-logo",    "ax-pop"],
+    ];
+
+ - Selector bilkul CSS jaisa hai:  #id   .class   .parent .child   h2   [data-x]
+ - Ek line mein selector ke saare elements par wo classes lag jati hain.
+ - Har line ke baad comma lagana na bhoolen.
+ - Galat selector likh diya to page nahi tootta, console mein warning aati hai.
+ - Elementor mein ID dene ke liye: Advanced > CSS ID  (ya CSS Classes ki jagah wahi).
+
+IMPORTANT: Is snippet ki animation classes se chalti hai. Sirf ID likhne se
+animation nahi lagti, ID TARGETS list mein dalni parti hai (upar wali list).
+
+
+=====================================================================
+5. DATA ATTRIBUTES  (optional - Elementor Pro > Advanced > Attributes)
+=====================================================================
+   data-ax-delay="300"        data-ax-duration="1200"
+   data-ax-distance="80"      data-ax-step="120"
+Class wali cheezein (ax-delay-300 waghera) in se zyada aasaan hain, in ki zaroorat nahi.
+
+
+=====================================================================
+6. ELEMENTOR MEIN KAISE LAGAYEIN
+=====================================================================
+1. Widget / Container select karein > Advanced tab
+2. "CSS Classes" mein likhein, space se alag:   ax-rise-3d ax-slow ax-delay-200
+3. (ID chahiye to) "CSS ID" mein:  hero-title   (# nahi likhna)
+4. Elementor editor mein animation nahi dikhti (jaan boojh kar band hai).
+   Preview / live page par dekhein.
+
+Popup ya ajax se naya content aaye to console mein chalayen:   window.axRefresh();
+
+
+=====================================================================
+7. TAIYAR COMBINATIONS (copy-paste)
+=====================================================================
+ Hero heading            ax-split-flip ax-slow
+ Hero paragraph          ax-blur-up ax-delay-300
+ Hero button             ax-pop ax-delay-600
+ Hero image              ax-iris ax-slow
+ Section title           ax-split-words
+ Cards ka row            ax-stagger ax-rise-3d ax-step-150
+ Team / logos            ax-stagger ax-zoom-in ax-fast
+ Left image + right text left: ax-from-left ax-slow | right: ax-fade-left ax-delay-200
+ Divider line            ax-grow-x
+ Number / stat box       ax-elastic
+ Gallery image           ax-reveal-up   ya  ax-curtain-x
+ Testimonial card        ax-swing-left
+ Footer columns          ax-stagger ax-fade-up
+ Sirf ek bar chale (repeat nahi)   ax-fade-up ax-once
+ Sirf desktop par        ax-from-left ax-no-mobile
+
+
+=====================================================================
+8. KHAAS BAATEIN
+=====================================================================
+ - Snippet "Site Wide Header" mein rakhein (zero flash). Footer mein bhi chalta hai.
+ - WP Rocket / LiteSpeed / Autoptimize ka "Delay JS" is snippet ko exclude karein,
+   warna interaction tak elements chhupe rahenge.
+ - Ek bar chalne ke baad element par se ax classes ka asar khatam ho jata hai
+   (ax-done), is liye Elementor ke hover / transform effects kharab nahi hote.
+ - ax-repeat ke saath ax-reveal-* / ax-curtain-* mein box-shadow clip ho sakta hai.
+ - prefers-reduced-motion wale users ko animation nahi dikhti, content normal dikhta hai.
+ - JS fail ho jaye to 5 second baad sab kuch khud dikh jata hai.
+ - Purane browsers (2022 se pehle) mein animation nahi chalti, content dikhta hai.
+ - Header / Footer / counter / marquee / slider ki classes aur IDs agle snippets
+   (Snippet 3 aur 4) ke saath isi tarah is file mein jorungi.
